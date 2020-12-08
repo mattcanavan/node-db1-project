@@ -27,10 +27,6 @@ const Accounts = {
     }
 }
 
-// function handleError(error) {
-//     res.status(500).json({ message: error.message })
-// }
-
 ///ENDPOINTS
 router.get("/", (req, res) => {
     Accounts.getAll()
@@ -42,16 +38,20 @@ router.get("/", (req, res) => {
     })
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", async (req, res) => {
     const { id } = req.params;
 
-    Accounts.getByID(id)
-    .then(success => {
-        res.status(200).json(success[0]) //we know prmise is returning collection with length 1, so why not return just the obj.
-    })
-    .catch(error => {
+    try {
+        const account = await Accounts.getById(id);
+        if(account.length === 0){
+            res.status(404).json({ message: "bad id."})
+        } else {
+            res.status(200).json(account[0]) //we know prmise is returning collection with length 1, so why not return just the obj.
+        }
+    }
+    catch(error) {
         res.status(500).json({ message: error.message })
-    })
+    }
 });
 
 router.post("/", (req, res) => {
