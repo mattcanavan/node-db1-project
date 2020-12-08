@@ -10,7 +10,7 @@ const Accounts = {
         return db.select('*').from('accounts')
     },
 
-    getByID(id) {
+    getById(id) {
         return db("accounts").where({ id: id }) //where takes obj with key:value pairs (column:value)
     },
 
@@ -20,9 +20,11 @@ const Accounts = {
 
     update(id, changes){
         return db("accounts").where({ id: id }).update(changes)
-    }
+    },
 
-    // delete(id)
+    delete(id){
+        return db("accounts").where({ id: id }).del()
+    }
 }
 
 // function handleError(error) {
@@ -53,17 +55,41 @@ router.get("/:id", (req, res) => {
 });
 
 router.post("/", (req, res) => {
-    console.log(req.body)
-    Accounts.create(req.body)
-    .then(([id]) => {
-      return Accounts.getById(id)
+    Accounts.create(req.body) //on success, returns collection with account id #
+    .then(newID => {
+      return Accounts.getById(newID[0])
     })
     .then(success => {
-      res.status(201).json(success[0]);
+      res.status(201).json(success[0]); //want only the first item in the success collection
     })
     .catch((error) => {
-      res.status(500).json(error);
+      res.status(500).json({ message: error.message });
     });
+})
+
+router.put("/:id", (req,res) => {
+    console.log("heres intersting stuff...", req.params.id, req.body)
+    Accounts.update(req.params.id, req.body)
+    .then(data => {
+        return Accounts.getById(req.params.id) 
+    })
+    .then(success => {
+        res.status(201).json({ message: success[0]})
+    })
+    .catch(error => {
+        res.status(500).json({ message: error.message })
+    })
+})
+
+router.delete("/:id", (req, res) => {
+
+    Accounts.delete(req.params.id)
+    .then(success => {
+        res.status(200).json({ message: `successfully deleted account with id ${req.params.id}.`})
+    })
+    .catch(error => {
+        res.status(500).json({ message: error.message })
+    })
 })
 
 module.exports = router;
